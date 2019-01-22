@@ -90,6 +90,10 @@ class ScenarioBuildResultData {
         }
     }
 
+    boolean isFlaky() {
+
+    }
+
     static class ExecutionData {
         Date time
         String commitId

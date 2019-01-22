@@ -20,36 +20,30 @@ import org.apache.commons.lang.StringUtils;
 import org.gradle.util.GFileUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URL;
 
-public class ReportGenerator {
-
-    public static void main(String... args) throws Exception {
-        Class<?> resultStoreClass = Class.forName(args[0]);
-        File outputDirectory = new File(args[1]);
-        ResultsStore resultStore = (ResultsStore) resultStoreClass.getConstructor().newInstance();
-        File resultJson = new File(args[2]);
-        String projectName = args[3];
-        try {
-            new ReportGenerator().generate(resultStore, outputDirectory, resultJson, projectName);
-        } finally {
-            resultStore.close();
-        }
+public abstract class AbstractReportGenerator<T extends ResultsStore> {
+    protected static <G extends AbstractReportGenerator> G getGenerator(Class<G> generatorClass) throws Exception {
+        return generatorClass.getConstructor().newInstance();
     }
 
-    void generate(final ResultsStore store, File outputDirectory, File resultJson, String projectName) {
-        try {
-            FileRenderer fileRenderer = new FileRenderer();
-            TestPageGenerator testHtmlRenderer = new TestPageGenerator(projectName);
-            TestDataGenerator testDataRenderer = new TestDataGenerator();
+    protected void generateReport(String... args) {
+        File outputDirectory = new File(args[1]);
+        File resultJson = new File(args[2]);
+        String projectName = args[3];
+        generate(outputDirectory, resultJson, projectName);
+    }
 
-            fileRenderer.render(store, new IndexPageGenerator(store, resultJson), new File(outputDirectory, "index.html"));
+    protected void generate(File outputDirectory, File resultJson, String projectName) {
+        try (ResultsStore store = getResultsStore()) {
+            renderIndexPage(store, resultJson, outputDirectory);
 
-            File testsDir = new File(outputDirectory, "tests");
             for (String testName : store.getTestNames()) {
                 PerformanceTestHistory testResults = store.getTestResults(testName, 500, 90, ResultsStoreHelper.determineChannel());
-                fileRenderer.render(testResults, testHtmlRenderer, new File(testsDir, testResults.getId() + ".html"));
-                fileRenderer.render(testResults, testDataRenderer, new File(testsDir, testResults.getId() + ".json"));
+                renderScenarioPage(projectName, outputDirectory, testResults);
             }
 
             copyResource("jquery.min-1.11.0.js", outputDirectory);
@@ -64,7 +58,25 @@ public class ReportGenerator {
         }
     }
 
-    private void copyResource(String resourceName, File outputDirectory) {
+    protected void renderIndexPage(ResultsStore store, File resultJson, File outputDirectory) throws IOException {
+        new FileRenderer().render(store, new IndexPageGenerator(store, resultJson), new File(outputDirectory, "index.html"));
+    }
+
+    protected void renderScenarioPage(String projectName, File outputDirectory, PerformanceTestHistory testResults) throws IOException {
+        FileRenderer fileRenderer = new FileRenderer();
+        TestPageGenerator testHtmlRenderer = new TestPageGenerator(projectName);
+        TestDataGenerator testDataRenderer = new TestDataGenerator();
+        fileRenderer.render(testResults, testHtmlRenderer, new File(outputDirectory, "tests/" + testResults.getId() + ".html"));
+        fileRenderer.render(testResults, testDataRenderer, new File(outputDirectory, "tests/" + testResults.getId() + ".json"));
+    }
+
+    protected ResultsStore getResultsStore() throws Exception {
+        Type superClass = getClass().getGenericSuperclass();
+        Class<? extends ResultsStore> resultsStoreClass = (Class<T>) ((ParameterizedType) superClass).getActualTypeArguments()[0];
+        return resultsStoreClass.getConstructor().newInstance();
+    }
+
+    protected void copyResource(String resourceName, File outputDirectory) {
         URL resource = getClass().getClassLoader().getResource("org/gradle/reporting/" + resourceName);
         String dir = StringUtils.substringAfterLast(resourceName, ".");
         GFileUtils.copyURLToFile(resource, new File(outputDirectory, dir + "/" + resourceName));
