@@ -268,7 +268,6 @@ class PerformanceTestPlugin : Plugin<Project> {
             channel = "historical"
         }
         create("distributedFlakinessDetection") {
-            setBaselines("nightly")
             reportGeneratorClass = "org.gradle.performance.results.FlakinessReportGenerator"
             repeat = 2
             checks = "none"
