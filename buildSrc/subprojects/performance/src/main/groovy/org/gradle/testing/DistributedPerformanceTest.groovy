@@ -124,6 +124,8 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
         println("Running against baseline ${determinedBaselines.getOrElse('defaults')}")
         try {
             doExecuteTests()
+        } catch (Throwable e) {
+            e.printStackTrace()
         } finally {
             generatePerformanceReport()
             testEventsGenerator.release()
