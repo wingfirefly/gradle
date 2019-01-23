@@ -47,9 +47,11 @@ public class TestScenarioSelector {
         boolean shouldRun = scenarios.isEmpty() || scenarios.contains(testId);
         String scenarioList = System.getProperty("org.gradle.performance.scenario.list");
         if (shouldRun && scenarioList != null) {
+            System.out.println("Add " + testId + " to " + scenarioList);
             addToScenarioList(testId, templates, new File(scenarioList), resultsStore);
             return false;
         } else {
+            System.out.println("Skip " + testId);
             return shouldRun;
         }
     }
