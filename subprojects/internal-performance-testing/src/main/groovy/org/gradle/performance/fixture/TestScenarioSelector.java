@@ -69,13 +69,14 @@ public class TestScenarioSelector {
     }
 
     private long getEstimatedRuntime(String testId, ResultsStore resultsStore) {
-        String channel = ResultsStoreHelper.determineChannel();
-        PerformanceTestHistory history = resultsStore.getTestResults(testId, 1, 365, channel);
-        PerformanceTestExecution lastRun = Iterables.getFirst(history.getExecutions(), null);
-        if (lastRun == null) {
-            return 0;
-        } else {
-            return lastRun.getEndTime() - lastRun.getStartTime();
-        }
+        return 0;
+//        String channel = ResultsStoreHelper.determineChannel();
+//        PerformanceTestHistory history = resultsStore.getTestResults(testId, 1, 365, channel);
+//        PerformanceTestExecution lastRun = Iterables.getFirst(history.getExecutions(), null);
+//        if (lastRun == null) {
+//            return 0;
+//        } else {
+//            return lastRun.getEndTime() - lastRun.getStartTime();
+//        }
     }
 }
