@@ -53,7 +53,9 @@ public class TestScenarioSelector {
             addToScenarioList(testId, templates, new File(scenarioList), resultsStore);
             return false;
         } else {
-            System.out.println("Skip " + testId);
+            if (true) {
+                throw new IllegalStateException("Skip " + testId);
+            }
             return shouldRun;
         }
     }
