@@ -154,6 +154,8 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
         def coordinatorBuild = resolveCoordinatorBuild()
         testEventsGenerator.coordinatorBuild = coordinatorBuild
 
+        println("scenarios: ${scenarios}")
+
         repeat.times {
             scenarios.each {
                 schedule(it, coordinatorBuild?.lastChangeId)
