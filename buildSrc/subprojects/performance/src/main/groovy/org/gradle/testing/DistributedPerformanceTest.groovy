@@ -122,6 +122,7 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
     @Override
     void executeTests() {
         println("Running against baseline ${determinedBaselines.getOrElse('defaults')}")
+        println("size: " + getCandidateClassFiles().size())
         getCandidateClassFiles().each { println(it) }
         try {
             doExecuteTests()
