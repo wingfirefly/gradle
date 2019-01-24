@@ -156,8 +156,6 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
         def coordinatorBuild = resolveCoordinatorBuild()
         testEventsGenerator.coordinatorBuild = coordinatorBuild
 
-        println("scenarios: ${scenarios}")
-
         repeat.times {
             scenarios.each {
                 schedule(it, coordinatorBuild?.lastChangeId)
@@ -170,7 +168,8 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
     }
 
     private void fillScenarioList() {
-        super.executeTests()
+        scenarioList.text = 'clean assemble on multiNative with parallel workers;0;multiNative'
+//        super.executeTests()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -199,7 +198,7 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
         }
         println("Scheduling $scenario.id, estimated runtime: $scenario.estimatedRuntime, coordinatorBuildId: $buildId, lastChangeId: $lastChangeId, build request: $requestBody")
 
-//        Map response = httpPost(path: 'buildQueue', requestContentType: ContentType.JSON, body: JsonOutput.toJson(requestBody))
+        Map response = httpPost(path: 'buildQueue', requestContentType: ContentType.JSON, body: JsonOutput.toJson(requestBody))
 
         /*
         {
@@ -235,15 +234,17 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
         }
         */
 
-//        String workerBuildId = response.id
-//        cancellationToken.addCallback {
-//            cancel(workerBuildId)
-//        }
-//        def scheduledChangeId = findLastChangeIdInJson(response)
-//        if (lastChangeId && lastChangeId != scheduledChangeId) {
-//            throw new RuntimeException("The requested change id is different than the actual one. requested change id: $lastChangeId in coordinatorBuildId: $buildId, actual change id: $scheduledChangeId in workerBuildId: $workerBuildId\nresponse: $response")
-//        }
-//        scheduledBuilds.put(workerBuildId, scenario)
+        String workerBuildId = response.id
+
+        println("Scheduled ${scenario.id} and worker id: ${workerBuildId}")
+        cancellationToken.addCallback {
+            cancel(workerBuildId)
+        }
+        def scheduledChangeId = findLastChangeIdInJson(response)
+        if (lastChangeId && lastChangeId != scheduledChangeId) {
+            throw new RuntimeException("The requested change id is different than the actual one. requested change id: $lastChangeId in coordinatorBuildId: $buildId, actual change id: $scheduledChangeId in workerBuildId: $workerBuildId\nresponse: $response")
+        }
+        scheduledBuilds.put(workerBuildId, scenario)
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)

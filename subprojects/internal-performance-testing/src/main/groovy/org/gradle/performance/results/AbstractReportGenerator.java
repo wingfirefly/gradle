@@ -31,9 +31,9 @@ public abstract class AbstractReportGenerator<T extends ResultsStore> {
     }
 
     protected void generateReport(String... args) {
-        File outputDirectory = new File(args[1]);
-        File resultJson = new File(args[2]);
-        String projectName = args[3];
+        File outputDirectory = new File(args[0]);
+        File resultJson = new File(args[1]);
+        String projectName = args[2];
         generate(outputDirectory, resultJson, projectName);
     }
 
