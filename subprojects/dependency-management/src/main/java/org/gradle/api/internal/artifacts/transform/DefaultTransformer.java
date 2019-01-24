@@ -163,11 +163,13 @@ public class DefaultTransformer implements Transformer {
             if (annotatedWith == PrimaryInput.class && serviceClass.isAssignableFrom(File.class)) {
                 return inputFile;
             }
-            if (annotatedWith == null && artifactTransformDependencies != null && serviceClass.isAssignableFrom(ArtifactTransformDependencies.class)) {
-                return artifactTransformDependencies;
-            }
-            if (annotatedWith == null && serviceClass.isInstance(config)) {
-                return config;
+            if (annotatedWith == null) {
+                if (artifactTransformDependencies != null && serviceClass.isAssignableFrom(ArtifactTransformDependencies.class)) {
+                    return artifactTransformDependencies;
+                }
+                if (serviceClass.isInstance(config)) {
+                    return config;
+                }
             }
             return null;
         }
