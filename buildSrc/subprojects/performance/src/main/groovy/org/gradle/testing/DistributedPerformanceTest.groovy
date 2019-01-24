@@ -168,7 +168,7 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
     }
 
     private void fillScenarioList() {
-        scenarioList.text = 'clean assemble on multiNative with parallel workers;0;multiNative'
+        scenarioList.text = 'help on k9AndroidBuild;106510;k9AndroidBuild'
 //        super.executeTests()
     }
 
