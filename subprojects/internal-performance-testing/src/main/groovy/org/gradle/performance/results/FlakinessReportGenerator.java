@@ -24,7 +24,13 @@ public class FlakinessReportGenerator extends AbstractReportGenerator<CrossVersi
         getGenerator(FlakinessReportGenerator.class).generateReport(args);
     }
 
+    @Override
     protected void renderIndexPage(ResultsStore store, File resultJson, File outputDirectory) throws IOException {
-        new FileRenderer().render(store, new FlakinessPageGenerator(store, resultJson), new File(outputDirectory, "index.html"));
+        new FileRenderer().render(store, new FlakinessIndexPageGenerator(store, resultJson), new File(outputDirectory, "index.html"));
+    }
+
+    @Override
+    protected void renderScenarioPage(String projectName, File outputDirectory, PerformanceTestHistory testResults) throws IOException {
+        new FileRenderer().render(testResults, new FlakinessScenarioPageGenerator(testResults), new File(outputDirectory, "tests/" + testResults.getId() + ".html"));
     }
 }

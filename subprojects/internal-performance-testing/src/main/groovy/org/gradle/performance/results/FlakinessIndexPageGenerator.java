@@ -27,10 +27,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class FlakinessPageGenerator extends AbstractTablePageGenerator {
+public class FlakinessIndexPageGenerator extends AbstractTablePageGenerator {
     private final String commitId = Git.current().getCommitId();
 
-    public FlakinessPageGenerator(ResultsStore resultsStore, File resultJson) {
+    public FlakinessIndexPageGenerator(ResultsStore resultsStore, File resultJson) {
         super(resultsStore, resultJson);
     }
 
