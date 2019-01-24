@@ -29,24 +29,18 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FlakinessScenarioPageGenerator extends HtmlPageGenerator<PerformanceTestHistory> {
-    private final PerformanceTestHistory testResults;
-
-    public FlakinessScenarioPageGenerator(PerformanceTestHistory testResults) {
-        this.testResults = testResults;
-    }
-
     @Override
-    public void render(PerformanceTestHistory model, Writer writer) throws IOException {
+    public void render(PerformanceTestHistory history, Writer writer) throws IOException {
         List<Graph> graphs = new ArrayList<>();
         // @formatter:off
         new MetricsHtml(writer) {{
             html();
                 head();
                     headSection(this);
-                    title("Flaky report for "+ testResults.getDisplayName()).end();
+                    title().text("Flaky report for "+ history.getDisplayName()).end();
                 end();
                 body();
-                    h2().text("Flaky report for " + testResults.getDisplayName()).end();
+                    h2().text("Flaky report for " + history.getDisplayName()).end();
                     div().id("flot-placeholder").end();
                     graphs.forEach(this::renderGraph);
                 end();
@@ -56,7 +50,7 @@ public class FlakinessScenarioPageGenerator extends HtmlPageGenerator<Performanc
         private void renderGraph(Graph graph) {
             h3().text(graph.title).end();
             div().id(graph.id).classAttr("chart").end();
-            script().raw(String.format("$.plot('#%s', %s, %s)", graph.id,graph.getData(), graph.getOptions())).end();
+            script().raw(String.format("$.plot('#%s', %s, %s)", graph.id, graph.getData(), graph.getOptions())).end();
         }
         };
         // @formatter:on

@@ -31,6 +31,6 @@ public class FlakinessReportGenerator extends AbstractReportGenerator<CrossVersi
 
     @Override
     protected void renderScenarioPage(String projectName, File outputDirectory, PerformanceTestHistory testResults) throws IOException {
-        new FileRenderer().render(testResults, new FlakinessScenarioPageGenerator(testResults), new File(outputDirectory, "tests/" + testResults.getId() + ".html"));
+        new FileRenderer().render(testResults, new FlakinessScenarioPageGenerator(), new File(outputDirectory, "tests/" + testResults.getId() + ".html"));
     }
 }

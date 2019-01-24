@@ -21,6 +21,7 @@ import org.gradle.performance.measure.DataSeries
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class ScenarioBuildResultData {
+    private static final int ENOUGH_REGRESSION_CONFIDENCE_THRESHOLD = 90
     String teamCityBuildId
     String scenarioName
     String webUrl
@@ -130,11 +131,11 @@ class ScenarioBuildResultData {
         }
 
         boolean confidentToSayBetter() {
-            return differencePercentage <= 0 && confidencePercentage > IndexPageGenerator.ENOUGH_REGRESSION_CONFIDENCE_THRESHOLD
+            return differencePercentage <= 0 && confidencePercentage > ENOUGH_REGRESSION_CONFIDENCE_THRESHOLD
         }
 
         boolean confidentToSayWorse() {
-            return differencePercentage > 0 && confidencePercentage > IndexPageGenerator.ENOUGH_REGRESSION_CONFIDENCE_THRESHOLD
+            return differencePercentage > 0 && confidencePercentage > ENOUGH_REGRESSION_CONFIDENCE_THRESHOLD
         }
     }
 }
