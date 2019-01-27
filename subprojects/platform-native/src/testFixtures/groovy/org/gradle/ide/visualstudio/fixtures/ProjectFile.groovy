@@ -18,6 +18,7 @@ package org.gradle.ide.visualstudio.fixtures
 
 import org.gradle.integtests.fixtures.SourceFile
 import org.gradle.nativeplatform.fixtures.app.CppSourceElement
+import org.gradle.nativeplatform.fixtures.app.SourceFileElement
 import org.gradle.nativeplatform.fixtures.app.TestNativeComponent
 import org.gradle.plugins.ide.fixtures.IdeProjectFixture
 import org.gradle.test.fixtures.file.TestFile
@@ -142,6 +143,10 @@ class ProjectFile extends IdeProjectFixture {
     void assertHasComponentSources(CppSourceElement component, String basePath) {
         assert sourceFiles == ['build.gradle'] + sourceFiles(component.sources.files, basePath)
         assert headerFiles == sourceFiles(component.headers.files, basePath)
+    }
+
+    void assertHasComponentSources(SourceFileElement component, String basePath) {
+        assert sourceFiles == ['build.gradle'] + sourceFiles(component.files, basePath)
     }
 
     void assertHasComponentSources(TestNativeComponent component, String basePath, TestNativeComponent component2, String basePath2) {

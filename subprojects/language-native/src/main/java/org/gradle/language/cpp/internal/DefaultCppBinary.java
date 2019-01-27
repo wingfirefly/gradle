@@ -222,7 +222,9 @@ public class DefaultCppBinary extends DefaultNativeBinary implements CppBinary {
 
         @Override
         public List<File> transform(File zippedFile) {
-            if (zippedFile.isDirectory()) {
+            if (!zippedFile.exists()) {
+                return Collections.emptyList();
+            } else if (zippedFile.isDirectory()) {
                 return Collections.singletonList(zippedFile);
             } else {
                 String unzippedDirName = removeExtension(zippedFile.getName());

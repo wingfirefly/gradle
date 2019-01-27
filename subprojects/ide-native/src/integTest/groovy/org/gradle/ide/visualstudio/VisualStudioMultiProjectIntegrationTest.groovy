@@ -18,6 +18,7 @@ package org.gradle.ide.visualstudio
 
 import groovy.transform.NotYetImplemented
 import org.gradle.ide.visualstudio.fixtures.AbstractVisualStudioIntegrationSpec
+import org.gradle.nativeplatform.fixtures.app.CppAppWithLibraries
 import org.gradle.nativeplatform.fixtures.app.CppAppWithLibrary
 import org.gradle.nativeplatform.fixtures.app.CppHelloWorldApp
 import org.gradle.nativeplatform.fixtures.app.ExeWithLibraryUsingLibraryHelloWorldApp
@@ -129,13 +130,67 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
         exeProject.assertHasComponentSources(app.executable, "src/main")
         exeProject.projectConfigurations.keySet() == projectConfigurations
         exeProject.projectConfigurations.values().each {
-            assert it.includePath == filePath("src/main/headers", "../lib/src/main/public")
+            assert it.includePath == filePath("src/main/headers")
             assert it.buildCommand.endsWith("gradle\" -p \"..\" :exe:install${it.name.capitalize()}")
         }
 
         and:
         final dllProject = projectFile("lib/libDll.vcxproj")
         dllProject.assertHasComponentSources(app.library, "src/main")
+        dllProject.projectConfigurations.keySet() == projectConfigurations
+        dllProject.projectConfigurations.values().each {
+            assert it.includePath == filePath("src/main/public", "src/main/headers")
+            assert it.buildCommand.endsWith("gradle\" -p \"..\" :lib:link${it.name.capitalize()}")
+        }
+
+        and:
+        final mainSolution = solutionFile("app.sln")
+        mainSolution.assertHasProjects("exe", "libDll")
+        mainSolution.assertReferencesProject(exeProject, projectConfigurations)
+        mainSolution.assertReferencesProject(dllProject, projectConfigurations)
+    }
+
+    def "create visual studio solution for executable that depends on a library with public headers in another project"() {
+        when:
+        app = new CppAppWithLibrary()
+        app.main.writeToProject(file("exe"))
+        app.greeter.writeToProject(file("lib"))
+
+        settingsFile << """
+            include ':exe', ':lib'
+        """
+        file("exe", "build.gradle") << """
+            apply plugin: 'cpp-application'
+            
+            dependencies {
+                implementation project(':lib')
+            }
+        """
+        file("lib", "build.gradle") << """
+            apply plugin: 'cpp-library'
+        """
+
+        and:
+        run ":visualStudio"
+
+        then:
+        result.assertTasksExecuted(":appVisualStudioSolution",
+            ":exe:exeVisualStudioFilters", ":exe:exeVisualStudioProject",
+            ":lib:libDllVisualStudioFilters", ":lib:libDllVisualStudioProject",
+            ":visualStudio")
+
+        and:
+        final exeProject = projectFile("exe/exe.vcxproj")
+        exeProject.assertHasComponentSources(app.main, "src/main")
+        exeProject.projectConfigurations.keySet() == projectConfigurations
+        exeProject.projectConfigurations.values().each {
+            assert it.includePath == filePath("src/main/headers", "../lib/src/main/public")
+            assert it.buildCommand.endsWith("gradle\" -p \"..\" :exe:install${it.name.capitalize()}")
+        }
+
+        and:
+        final dllProject = projectFile("lib/libDll.vcxproj")
+        dllProject.assertHasComponentSources(app.greeter, "src/main")
         dllProject.projectConfigurations.keySet() == projectConfigurations
         dllProject.projectConfigurations.values().each {
             assert it.includePath == filePath("src/main/public", "src/main/headers")
@@ -193,7 +248,7 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
         exeProject.assertHasComponentSources(app.executable, "src/main")
         exeProject.projectConfigurations.keySet() == projectConfigurations
         exeProject.projectConfigurations.values().each {
-            assert it.includePath == filePath("src/main/headers", "../lib/src/main/public")
+            assert it.includePath == filePath("src/main/headers")
             assert it.buildCommand.endsWith("gradle\" -p \"..\" :exe:install${it.name.capitalize()}")
         }
 
@@ -218,12 +273,14 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
 
     def "create visual studio solution for executable that transitively depends on multiple projects"() {
         given:
-        def app = new ExeWithLibraryUsingLibraryHelloWorldApp()
-        app.writeSources(file("exe/src/main"), file("lib/src/main"), file("greet/src/main"))
+        def app = new CppAppWithLibraries()
+        app.main.writeToProject(file("exe"))
+        app.greeterLib.writeToProject(file("lib"))
+        app.loggerLib.writeToProject(file("logger"))
 
         and:
         settingsFile << """
-            include ':exe', ':lib', ':greet'
+            include ':exe', ':lib', ':logger'
         """
         buildFile << """
             project(":exe") {
@@ -237,10 +294,10 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
                 apply plugin: "cpp-library"
                 
                 dependencies {
-                    implementation project(':greet')
+                    implementation project(':logger')
                 }
             }
-            project(":greet") {
+            project(":logger") {
                 apply plugin: "cpp-library"
                 
                 library {
@@ -255,36 +312,38 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
         then:
         result.assertTasksExecuted(":appVisualStudioSolution",
             ":exe:exeVisualStudioFilters", ":exe:exeVisualStudioProject",
-            ":greet:greetLibVisualStudioFilters", ":greet:greetLibVisualStudioProject",
+            ":logger:loggerLibVisualStudioFilters", ":logger:loggerLibVisualStudioProject",
             ":lib:libDllVisualStudioFilters", ":lib:libDllVisualStudioProject",
             ":visualStudio")
 
         and:
         final exeProject = projectFile("exe/exe.vcxproj")
         final helloDllProject = projectFile("lib/libDll.vcxproj")
-        final greetLibProject = projectFile("greet/greetLib.vcxproj")
+        final loggerLibProject = projectFile("logger/loggerLib.vcxproj")
         final mainSolution = solutionFile("app.sln")
 
         and:
-        mainSolution.assertHasProjects("exe", "libDll", "greetLib")
+        mainSolution.assertHasProjects("exe", "libDll", "loggerLib")
         mainSolution.assertReferencesProject(exeProject, projectConfigurations)
         mainSolution.assertReferencesProject(helloDllProject, projectConfigurations)
-        mainSolution.assertReferencesProject(greetLibProject, projectConfigurations)
+        mainSolution.assertReferencesProject(loggerLibProject, projectConfigurations)
 
         and:
         exeProject.projectConfigurations['debug'].includePath == filePath("src/main/headers", "../lib/src/main/public")
-        helloDllProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers", "../greet/src/main/public")
-        greetLibProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers")
+        helloDllProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers", "../logger/src/main/public")
+        loggerLibProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers")
     }
 
     def "create visual studio solution for executable with a transitive api dependency"() {
         given:
-        def app = new ExeWithLibraryUsingLibraryHelloWorldApp()
-        app.writeSources(file("exe/src/main"), file("lib/src/main"), file("greet/src/main"))
+        def app = new CppAppWithLibraries()
+        app.main.writeToProject(file("exe"))
+        app.greeterLib.writeToProject(file("lib"))
+        app.loggerLib.writeToProject(file("logger"))
 
         and:
         settingsFile << """
-            include ':exe', ':lib', ':greet'
+            include ':exe', ':lib', ':logger'
         """
         buildFile << """
             project(":exe") {
@@ -298,10 +357,10 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
                 apply plugin: "cpp-library"
                 
                 dependencies {
-                    api project(':greet')
+                    api project(':logger')
                 }
             }
-            project(":greet") {
+            project(":logger") {
                 apply plugin: "cpp-library"
                 
                 library {
@@ -316,26 +375,26 @@ class VisualStudioMultiProjectIntegrationTest extends AbstractVisualStudioIntegr
         then:
         result.assertTasksExecuted(":appVisualStudioSolution",
             ":exe:exeVisualStudioFilters", ":exe:exeVisualStudioProject",
-            ":greet:greetLibVisualStudioFilters", ":greet:greetLibVisualStudioProject",
+            ":logger:loggerLibVisualStudioFilters", ":logger:loggerLibVisualStudioProject",
             ":lib:libDllVisualStudioFilters", ":lib:libDllVisualStudioProject",
             ":visualStudio")
 
         and:
         final exeProject = projectFile("exe/exe.vcxproj")
         final helloDllProject = projectFile("lib/libDll.vcxproj")
-        final greetLibProject = projectFile("greet/greetLib.vcxproj")
+        final loggerLibProject = projectFile("logger/loggerLib.vcxproj")
         final mainSolution = solutionFile("app.sln")
 
         and:
-        mainSolution.assertHasProjects("exe", "libDll", "greetLib")
+        mainSolution.assertHasProjects("exe", "libDll", "loggerLib")
         mainSolution.assertReferencesProject(exeProject, projectConfigurations)
         mainSolution.assertReferencesProject(helloDllProject, projectConfigurations)
-        mainSolution.assertReferencesProject(greetLibProject, projectConfigurations)
+        mainSolution.assertReferencesProject(loggerLibProject, projectConfigurations)
 
         and:
-        exeProject.projectConfigurations['debug'].includePath == filePath("src/main/headers", "../lib/src/main/public", "../greet/src/main/public")
-        helloDllProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers", "../greet/src/main/public")
-        greetLibProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers")
+        exeProject.projectConfigurations['debug'].includePath == filePath("src/main/headers", "../lib/src/main/public", "../logger/src/main/public")
+        helloDllProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers", "../logger/src/main/public")
+        loggerLibProject.projectConfigurations['debug'].includePath == filePath("src/main/public", "src/main/headers")
     }
 
     @Requires(TestPrecondition.MSBUILD)
