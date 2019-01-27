@@ -122,7 +122,6 @@ public class IndexPageGenerator extends AbstractTablePageGenerator {
             @Override
             protected void renderScenarioButtons(int index, ScenarioBuildResultData scenario) {
                 a().target("_blank").classAttr("btn btn-primary btn-sm").href(scenario.getWebUrl()).text("Build").end();
-                a().target("_blank").classAttr("btn btn-primary btn-sm").href("tests/" + urlEncode(PerformanceTestHistory.convertToId(scenario.getScenarioName()) + ".html")).text("Graph").end();
             }
         };
     }

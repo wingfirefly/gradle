@@ -92,7 +92,7 @@ class ScenarioBuildResultData {
     }
 
     boolean isFlaky() {
-
+        return true
     }
 
     static class ExecutionData {

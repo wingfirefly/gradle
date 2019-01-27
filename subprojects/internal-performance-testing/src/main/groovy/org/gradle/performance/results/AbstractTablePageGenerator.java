@@ -261,6 +261,7 @@ public abstract class AbstractTablePageGenerator extends HtmlPageGenerator<Resul
                             end();
                             div().classAttr("col-2");
                                 renderScenarioButtons(index, scenario);
+                                a().target("_blank").classAttr("btn btn-primary btn-sm").href("tests/" + urlEncode(PerformanceTestHistory.convertToId(scenario.getScenarioName()) + ".html")).text("Graph").end();
                                 a().classAttr("btn btn-primary btn-sm collapsed").href("#").attr("data-toggle", "collapse", "data-target", "#collapse" + index).text("Detail ▼").end();
                             end();
                             div().classAttr("col-2 p-0");
