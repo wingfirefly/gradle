@@ -92,7 +92,7 @@ class ScenarioBuildResultData {
     }
 
     boolean isFlaky() {
-        return true
+        return executions.any { it.confidencePercentage > 95 }
     }
 
     static class ExecutionData {

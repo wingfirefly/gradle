@@ -168,7 +168,6 @@ class DistributedPerformanceTest extends ReportGenerationPerformanceTest {
     }
 
     private void fillScenarioList() {
-//        scenarioList.text = 'help on k9AndroidBuild;106510;k9AndroidBuild'
         super.executeTests()
     }
 

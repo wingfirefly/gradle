@@ -38,7 +38,14 @@ open class DetermineBaselines : DefaultTask() {
 
     @TaskAction
     fun determineForkPointCommitBaseline() {
-        determinedBaselines.set(getVersionFromCommit(currentCommit()))
+        determinedBaselines.set("nightly")
+//        if (configuredBaselines.getOrElse("") == forceDefaultBaseline) {
+//            determinedBaselines.set(defaultBaseline)
+//        } else if (!currentBranchIsMasterOrRelease() && configuredBaselines.isDefaultValue()) {
+//            determinedBaselines.set(forkPointCommitBaseline())
+//        } else {
+//            determinedBaselines.set(configuredBaselines)
+//        }
     }
 
     private
@@ -57,16 +64,8 @@ open class DetermineBaselines : DefaultTask() {
                 releaseForkPointCommit
             else
                 masterForkPointCommit
-        return getVersionFromCommit(forkPointCommit)
-    }
-
-    private
-    fun currentCommit() = project.execAndGetStdout("git", "rev-parse", "HEAD")
-
-    private
-    fun getVersionFromCommit(commitId: String): String {
-        val baseVersionOnForkPoint = project.execAndGetStdout("git", "show", "$commitId:version.txt")
-        val shortCommitId = project.execAndGetStdout("git", "rev-parse", "--short", commitId)
+        val baseVersionOnForkPoint = project.execAndGetStdout("git", "show", "$forkPointCommit:version.txt")
+        val shortCommitId = project.execAndGetStdout("git", "rev-parse", "--short", forkPointCommit)
         return "$baseVersionOnForkPoint-commit-$shortCommitId"
     }
 }
